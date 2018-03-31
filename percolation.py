@@ -1,66 +1,75 @@
-import numpy as np
-import pygame
-import random
-
 from quickunionfind import QuickUnionFind
 
-# Colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-BLUE = (0, 0, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
 
-# Site dimensions
-WIDTH = 15
-HEIGHT = 15
-MARGIN = 1
+class Percolation(object):
+    def __init__(self, width):
+        #
+        self.width = width
+        self.number_of_sites = width**2
+        self.number_of_open_sites = 0
+        # Site state initalization
+        self.sites_states = [False] * (self.number_of_sites + 2)
+        self.sites_states[0] = True
+        self.sites_states[self.number_of_sites + 1] = True
+        # Union Find object initalization
+        self.union_find = QuickUnionFind(width + 2)
+        self.union_find_adjustor = QuickUnionFind(width + 1)
 
-# Grid initialization
-grid = []
-rows = 50
-columns = 50
-for row in range(rows):
-    grid.append([])
-    for column in range(columns):
-        grid[row].append(0)
-random_rows = random.sample(range(0, rows), rows)
-random_columns = random.sample(range(0, columns), columns)
 
-# Pygame initialization
-WINDOW_SIZE = [(columns * WIDTH + (MARGIN * columns) + MARGIN), (rows * HEIGHT + (MARGIN * rows) + MARGIN)]
-screen = pygame.display.set_mode(WINDOW_SIZE)
-pygame.display.set_caption("Percolation Threshold Checker")
-clock = pygame.time.Clock()
-pygame.init()
+    def is_open(self, i, j):
+        if i < 1 or i > self.width or j < 1 or j > self.width:
+            raise IndexError
+        site_to_open = (i - 1) * self.width + j
+        return self.sites_states[site_to_open]
 
-union_find = QuickUnionFind()
-done = False
 
-while not done:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            done = True
+    def open_site(self, i, j):
+        if i <=0 or j <= 0 or i > self.width or j > self.width:
+            raise IndexError
 
-    # Fills new square
-    while True:
-        random_row = random.randint(0, rows) - 1
-        random_column = random.randint(0, columns) - 1
-        if grid[random_row][random_column] == 0:
-            grid[random_row][random_column] = 1
-            break
+        if self.is_open(i, j):
+            return     
 
-    # Drawing
-    screen.fill(WHITE)
-    for row in range(rows):
-        for column in range(columns):
-            color = BLACK
-            if grid[row][column] == 1:
-                color = WHITE
-            pygame.draw.rect(screen, color, [(MARGIN + WIDTH) * column + MARGIN, (MARGIN + HEIGHT) * row + MARGIN, WIDTH, HEIGHT])
+        site_to_open = (i - 1) * self.width + j
+        self.sites_states[site_to_open] = 1
+        self.number_of_open_sites = self.number_of_open_sites + 1
 
-    # FPS
-    clock.tick(60)
-    pygame.display.flip()
+        if j != 1 and self.is_open(i, j - 1):
+            self.union_find.union(site_to_open - 1, site_to_open)
+            self.union_find_adjustor.union(site_to_open - 1, site_to_open)
+        
+        if j != self.width and self.is_open(i, j + 1):
+            self.union_find.union(site_to_open + 1, site_to_open)
+            self.union_find_adjustor.union(site_to_open + 1, site_to_open)
+        
+        if i != 1 and self.is_open(i - 1, j):
+            self.union_find.union(site_to_open - self.width, site_to_open)
+            self.union_find_adjustor.union(site_to_open - self.width, site_to_open)
+        
+        if i != self.width and self.is_open(i + 1, j):
+            self.union_find.union(site_to_open + self.width, site_to_open)
+            self.union_find_adjustor.union(site_to_open + self.width, site_to_open)
+        
+        if site_to_open <= self.width:
+            self.union_find.union(0, site_to_open)
+            self.union_find_adjustor.union(0, site_to_open)
+        
+        if site_to_open > self.number_of_sites - self.width:
+            self.union_find.union(self.number_of_sites + 1, site_to_open)
+        
 
-pygame.quit()
+
+    def is_full(self, i, j):
+        if i < 1 or j > self.width or j < 1 or j > self.width:
+            raise IndexError
+
+        site_to_open = (i - 1) * self.width + j
+        return self.union_find.connected(0, site_to_open) and self.union_find_adjustor.connected(0, site_to_open)
+
+
+    def get_number_of_open_site(self):
+        return self.number_of_open_sites    
+
+
+    def percolates(self):
+        return self.union_find.connected(0, self.number_of_sites + 1)               

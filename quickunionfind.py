@@ -1,10 +1,7 @@
 class QuickUnionFind(object):
     def __init__(self, n):
-        self.id = []
-        self.sz = []
-        for i in range(n):
-            self.id[i] = i;
-            self.sz[i] = 1
+        self.id = [i for i in range(0, n)]
+        self.size = [1] * n
 
     def root(self, i):
         while i != self.id[i]:
@@ -20,9 +17,20 @@ class QuickUnionFind(object):
         j = self.root(q)
         if i == j:
             return
-        if self.sz[i] < self.sz[j]:
+        if self.size[i] < self.size[j]:
             self.id[i] = j
-            self.sz[j] = self.sz[j] + self.sz[i]
+            self.size[j] = self.size[j] + self.size[i]
         else:
-            id[j] = i
-            self.sz[i] = self.sz[i] + self.sz[j]
+            self.id[j] = i
+            self.size[i] = self.size[i] + self.size[j]
+
+    def count(self):
+        number_of_nodes = 0
+        nodes = set()
+        for i in range(len(self.id)):
+            node_to_check = self.root(i)
+            if not node_to_check in nodes:
+                nodes.add(node_to_check)
+                number_of_nodes = number_of_nodes + 1
+
+        return number_of_nodes        
