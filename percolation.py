@@ -12,8 +12,8 @@ class Percolation(object):
         self.sites_states[0] = True
         self.sites_states[self.number_of_sites + 1] = True
         # Union Find object initalization
-        self.union_find = QuickUnionFind(width + 2)
-        self.union_find_adjustor = QuickUnionFind(width + 1)
+        self.union_find = QuickUnionFind(self.number_of_sites + 2)
+        self.union_find_adjustor = QuickUnionFind(self.number_of_sites + 1)
 
 
     def is_open(self, i, j):
@@ -24,7 +24,7 @@ class Percolation(object):
 
 
     def open_site(self, i, j):
-        if i <=0 or j <= 0 or i > self.width or j > self.width:
+        if i <= 0 or j <= 0 or i > self.width or j > self.width:
             raise IndexError
 
         if self.is_open(i, j):
@@ -60,7 +60,7 @@ class Percolation(object):
 
 
     def is_full(self, i, j):
-        if i < 1 or j > self.width or j < 1 or j > self.width:
+        if i < 1 or i > self.width or j < 1 or j > self.width:
             raise IndexError
 
         site_to_open = (i - 1) * self.width + j
